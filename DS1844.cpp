@@ -2,12 +2,15 @@
   DS1844.h - Library for controlling a Maxim Integrated DS1844 Quad Digital Potentiometer
   Created by Matt Westwick; March 23, 2013
   Released into the public domain.
+  
+  august 2018 - updated
+  readValue( pot ) method now just returns the value without the id as part of the byte
+
 */
 
 #include "Arduino.h"
 #include "Wire.h"
 #include "DS1844.h"
-
 
 DS1844::DS1844(int address)
 {
@@ -25,11 +28,11 @@ DS1844::DS1844(int address)
 void DS1844::write(int pot, int value) {    //value is between 0 and 63
   
   if (value > 63) {  //prevents values that are too large from overwriting address bits
-  value = 63;
+    value = 63;
   }
   
   if (pot > 3) { //prevents mistransmission of address bits
-	pot = 3;
+  	pot = 3;
   }
   
   byte bvalue = byte(value);
@@ -47,9 +50,26 @@ int DS1844::read(int pot) {
   int PotRead[4];
   int j = 0;
   int address = this->address;
+  
+
   Wire.requestFrom(address, 4);
   while (Wire.available()) {
    PotRead[j] = Wire.read();
+   j++;
+  }
+  
+  return PotRead[pot];
+}
+
+int DS1844::readValue(int pot) {
+  int PotRead[4];
+  int j = 0;
+  int address = this->address;
+  
+
+  Wire.requestFrom(address, 4);
+  while (Wire.available()) {
+   PotRead[j] = 63 & Wire.read(); // 63 is binary 0011111111 so this bitmask gets only the value, not the pot id.
    j++;
   }
   
